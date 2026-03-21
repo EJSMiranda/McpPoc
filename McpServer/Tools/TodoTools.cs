@@ -11,7 +11,7 @@ public static class TodoTools
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
     [McpServerTool, Description("List all todo items")]
-    public static async Task<string> ListTodos(TodoApiClient client)
+    public static async Task<string> ListTodos(ITodoApiClient client)
     {
         var todos = await client.GetAllTodosAsync();
         return JsonSerializer.Serialize(todos, _jsonOptions);
@@ -19,7 +19,7 @@ public static class TodoTools
 
     [McpServerTool, Description("Get a specific todo item by ID")]
     public static async Task<string> GetTodo(
-        TodoApiClient client,
+        ITodoApiClient client,
         [Description("Todo item ID")] int id
     )
     {
@@ -31,7 +31,7 @@ public static class TodoTools
 
     [McpServerTool, Description("Create a new todo item")]
     public static async Task<string> CreateTodo(
-        TodoApiClient client,
+        ITodoApiClient client,
         [Description("Todo title")] string title,
         [Description("Todo description")] string description
     )
@@ -43,7 +43,7 @@ public static class TodoTools
 
     [McpServerTool, Description("Update an existing todo item")]
     public static async Task<string> UpdateTodo(
-        TodoApiClient client,
+        ITodoApiClient client,
         [Description("Todo item ID")] int id,
         [Description("Todo title")] string title,
         [Description("Todo description")] string description,
@@ -65,7 +65,7 @@ public static class TodoTools
 
     [McpServerTool, Description("Delete a todo item by ID")]
     public static async Task<string> DeleteTodo(
-        TodoApiClient client,
+        ITodoApiClient client,
         [Description("Todo item ID")] int id
     )
     {
@@ -75,7 +75,7 @@ public static class TodoTools
 
     [McpServerTool, Description("Search todo items by content")]
     public static async Task<string> SearchTodos(
-        TodoApiClient client,
+        ITodoApiClient client,
         [Description("Search query")] string query
     )
     {
@@ -84,7 +84,7 @@ public static class TodoTools
     }
 
     [McpServerTool, Description("Check if the Todo API is healthy")]
-    public static async Task<string> HealthCheck(TodoApiClient client)
+    public static async Task<string> HealthCheck(ITodoApiClient client)
     {
         var isHealthy = await client.HealthCheckAsync();
         return isHealthy ? "Todo API is healthy and responding" : "Todo API is not responding";

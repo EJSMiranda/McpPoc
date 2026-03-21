@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace McpServer.Clients.TodoApiClient;
 
-public class TodoApiClient
+public class TodoApiClient : ITodoApiClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<TodoApiClient> _logger;
@@ -37,6 +37,11 @@ public class TodoApiClient
 
         response.EnsureSuccessStatusCode();
         var todo = await response.Content.ReadFromJsonAsync<TodoItem>();
+        if (todo == null)
+        {
+            _logger.LogWarning("Todo with ID {TodoId} returned null response", id);
+            return null;
+        }
         _logger.LogDebug("Retrieved todo with ID {TodoId}", id);
         return todo;
     }
@@ -48,7 +53,7 @@ public class TodoApiClient
         response.EnsureSuccessStatusCode();
         var todo =
             await response.Content.ReadFromJsonAsync<TodoItem>()
-            ?? throw new Exception("Failed to create todo");
+            ?? throw new InvalidOperationException("Failed to create todo: response was null");
         _logger.LogInformation("Created todo with ID {TodoId}", todo.Id);
         return todo;
     }
@@ -65,6 +70,11 @@ public class TodoApiClient
 
         response.EnsureSuccessStatusCode();
         var todo = await response.Content.ReadFromJsonAsync<TodoItem>();
+        if (todo == null)
+        {
+            _logger.LogWarning("Updated todo with ID {TodoId} returned null response", id);
+            return null;
+        }
         _logger.LogInformation("Updated todo with ID {TodoId}", id);
         return todo;
     }

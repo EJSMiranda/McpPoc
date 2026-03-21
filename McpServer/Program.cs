@@ -13,7 +13,7 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnCh
 builder.Services.AddLogging(configure => configure.AddConsole());
 
 // Configure HttpClient for TodoApiClient
-builder.Services.AddHttpClient<TodoApiClient>(
+builder.Services.AddHttpClient<ITodoApiClient, TodoApiClient>(
     (serviceProvider, client) =>
     {
         var configuration = serviceProvider.GetRequiredService<IConfiguration>();

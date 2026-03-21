@@ -8,11 +8,13 @@ namespace McpServer.Tools;
 [McpServerToolType]
 public static class TodoTools
 {
+    private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+
     [McpServerTool, Description("List all todo items")]
     public static async Task<string> ListTodos(TodoApiClient client)
     {
         var todos = await client.GetAllTodosAsync();
-        return JsonSerializer.Serialize(todos, new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(todos, _jsonOptions);
     }
 
     [McpServerTool, Description("Get a specific todo item by ID")]
@@ -23,7 +25,7 @@ public static class TodoTools
     {
         var todo = await client.GetTodoByIdAsync(id);
         return todo != null
-            ? JsonSerializer.Serialize(todo, new JsonSerializerOptions { WriteIndented = true })
+            ? JsonSerializer.Serialize(todo, _jsonOptions)
             : $"Todo with ID {id} not found";
     }
 
@@ -36,7 +38,7 @@ public static class TodoTools
     {
         var request = new CreateTodoRequest { Title = title, Description = description };
         var todo = await client.CreateTodoAsync(request);
-        return JsonSerializer.Serialize(todo, new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(todo, _jsonOptions);
     }
 
     [McpServerTool, Description("Update an existing todo item")]
@@ -57,7 +59,7 @@ public static class TodoTools
 
         var todo = await client.UpdateTodoAsync(id, request);
         return todo != null
-            ? JsonSerializer.Serialize(todo, new JsonSerializerOptions { WriteIndented = true })
+            ? JsonSerializer.Serialize(todo, _jsonOptions)
             : $"Todo with ID {id} not found";
     }
 
@@ -78,7 +80,7 @@ public static class TodoTools
     )
     {
         var todos = await client.SearchTodosAsync(query);
-        return JsonSerializer.Serialize(todos, new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(todos, _jsonOptions);
     }
 
     [McpServerTool, Description("Check if the Todo API is healthy")]

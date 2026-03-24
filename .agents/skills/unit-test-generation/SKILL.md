@@ -115,6 +115,7 @@ public sealed class {ClassName}Tests
 4. **Generate test structure**: Create test class with proper setup/cleanup
 5. **Implement test methods**: Write tests following Arrange-Act-Assert pattern
 6. **Verify with existing tests**: Ensure new tests match repository conventions
+7. **Testing Integrity**: Never modify production code to make tests pass. If tests reveal bugs or issues, inform the user to decide the appropriate course of action.
 
 ## Example Output
 

@@ -160,6 +160,7 @@ dotnet publish/McpServer.dll
 - Follow Arrange-Act-Assert pattern
 - Use `[TestInitialize]` and `[TestCleanup]` for setup/teardown
 - Test names should describe scenario: `Given_[State]_When_[Action]_Then_[Result]`
+- **Testing Integrity**: Never modify production code to make tests pass. If tests reveal bugs or issues, inform the user to decide the appropriate course of action.
 
 ### API Design (TodoApi)
 - Use Minimal API pattern
@@ -233,6 +234,7 @@ dotnet format --verify-no-changes
 - Test database uses InMemory provider to avoid dependencies
 - Always run tests after making changes
 - Check build script (`build.ps1`) for standard build process
+- **Code Language Policy**: Regardless of the user's language or agent responses, all code implementation must be in English (class names, method names, comments, etc.)
 
 ## Troubleshooting
 

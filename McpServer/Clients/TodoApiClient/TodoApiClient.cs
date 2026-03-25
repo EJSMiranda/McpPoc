@@ -3,17 +3,26 @@ using Microsoft.Extensions.Logging;
 
 namespace McpServer.Clients.TodoApiClient;
 
+/// <summary>
+/// Provides HTTP client implementation for communicating with the Todo API.
+/// </summary>
 public class TodoApiClient : ITodoApiClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<TodoApiClient> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TodoApiClient"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client for making API requests.</param>
+    /// <param name="logger">The logger for recording client events.</param>
     public TodoApiClient(HttpClient httpClient, ILogger<TodoApiClient> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
     }
 
+    /// <inheritdoc />
     public async Task<List<TodoItem>> GetAllTodosAsync()
     {
         _logger.LogDebug("Getting all todos from API");
@@ -25,6 +34,7 @@ public class TodoApiClient : ITodoApiClient
         return todos;
     }
 
+    /// <inheritdoc />
     public async Task<TodoItem?> GetTodoByIdAsync(int id)
     {
         _logger.LogDebug("Getting todo with ID {TodoId}", id);
@@ -46,6 +56,7 @@ public class TodoApiClient : ITodoApiClient
         return todo;
     }
 
+    /// <inheritdoc />
     public async Task<TodoItem> CreateTodoAsync(CreateTodoRequest request)
     {
         _logger.LogDebug("Creating new todo with title: {Title}", request.Title);
@@ -58,6 +69,7 @@ public class TodoApiClient : ITodoApiClient
         return todo;
     }
 
+    /// <inheritdoc />
     public async Task<TodoItem?> UpdateTodoAsync(int id, UpdateTodoRequest request)
     {
         _logger.LogDebug("Updating todo with ID {TodoId}", id);
@@ -79,6 +91,7 @@ public class TodoApiClient : ITodoApiClient
         return todo;
     }
 
+    /// <inheritdoc />
     public async Task<bool> DeleteTodoAsync(int id)
     {
         _logger.LogDebug("Deleting todo with ID {TodoId}", id);
@@ -94,6 +107,7 @@ public class TodoApiClient : ITodoApiClient
         return true;
     }
 
+    /// <inheritdoc />
     public async Task<List<TodoItem>> SearchTodosAsync(string query)
     {
         _logger.LogDebug("Searching todos with query: {Query}", query);
@@ -107,6 +121,7 @@ public class TodoApiClient : ITodoApiClient
         return todos;
     }
 
+    /// <inheritdoc />
     public async Task<bool> HealthCheckAsync()
     {
         try

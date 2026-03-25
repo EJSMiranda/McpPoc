@@ -5,12 +5,23 @@ using TodoApi.Models;
 
 namespace TodoApi.Repositories;
 
+/// <summary>
+/// Provides data access operations for todo items using Entity Framework Core.
+/// </summary>
 public class TodoRepository : ITodoRepository
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly TodoContext _context;
     private readonly ILogger<TodoRepository> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TodoRepository"/> class.
+    /// </summary>
+    /// <param name="context">The database context for todo operations.</param>
+    /// <param name="logger">The logger for recording repository events.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="context"/> or <paramref name="logger"/> is null.
+    /// </exception>
     public TodoRepository(TodoContext context, ILogger<TodoRepository> logger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -18,6 +29,7 @@ public class TodoRepository : ITodoRepository
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<TodoItem>> GetAllAsync(
         CancellationToken cancellationToken = default
     )
@@ -34,6 +46,7 @@ public class TodoRepository : ITodoRepository
         }
     }
 
+    /// <inheritdoc />
     public async Task<TodoItem?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         try
@@ -48,6 +61,7 @@ public class TodoRepository : ITodoRepository
         }
     }
 
+    /// <inheritdoc />
     public async Task<TodoItem> CreateAsync(
         CreateTodoRequest request,
         CancellationToken cancellationToken = default
@@ -78,6 +92,7 @@ public class TodoRepository : ITodoRepository
         }
     }
 
+    /// <inheritdoc />
     public async Task<TodoItem?> UpdateAsync(
         int id,
         UpdateTodoRequest request,
@@ -111,6 +126,7 @@ public class TodoRepository : ITodoRepository
         }
     }
 
+    /// <inheritdoc />
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         try
@@ -137,6 +153,7 @@ public class TodoRepository : ITodoRepository
         }
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<TodoItem>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default

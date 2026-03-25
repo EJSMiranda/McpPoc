@@ -5,17 +5,26 @@ using Moq;
 
 namespace McpServer.Test;
 
+/// <summary>
+/// Contains unit tests for the <see cref="TodoTools"/> class.
+/// </summary>
 [TestClass]
 public sealed class TodoToolsTests
 {
     private Mock<ITodoApiClient> _mockApiClient = null!;
 
+    /// <summary>
+    /// Sets up the test environment before each test method execution.
+    /// </summary>
     [TestInitialize]
     public void Setup()
     {
         _mockApiClient = new Mock<ITodoApiClient>();
     }
 
+    /// <summary>
+    /// Tests that ListTodos returns serialized JSON when the API client returns todo items.
+    /// </summary>
     [TestMethod]
     public async Task Given_ApiClientReturnsTodos_When_ListTodos_Then_ReturnsSerializedJson()
     {
@@ -49,16 +58,20 @@ public sealed class TodoToolsTests
         _mockApiClient.Verify(c => c.GetAllTodosAsync(), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that GetTodo returns serialized JSON when the API client returns a todo item.
+    /// </summary>
     [TestMethod]
-    public async Task Given_ExistingTodoId_When_GetTodo_Then_ReturnsSerializedTodo()
+    public async Task Given_ApiClientReturnsTodo_When_GetTodo_Then_ReturnsSerializedJson()
     {
         // Arrange
         var todo = new TodoItem
         {
             Id = 1,
-            Title = "Test",
-            Description = "Desc",
+            Title = "Test Todo",
+            Description = "Test Description",
         };
+
         _mockApiClient.Setup(c => c.GetTodoByIdAsync(1)).ReturnsAsync(todo);
 
         // Act
@@ -69,12 +82,15 @@ public sealed class TodoToolsTests
         var deserialized = JsonSerializer.Deserialize<TodoItem>(result);
         Assert.IsNotNull(deserialized);
         Assert.AreEqual(1, deserialized.Id);
-        Assert.AreEqual("Test", deserialized.Title);
+        Assert.AreEqual("Test Todo", deserialized.Title);
         _mockApiClient.Verify(c => c.GetTodoByIdAsync(1), Times.Once);
     }
 
+    /// <summary>
+    /// Tests that GetTodo returns a not found message when the API client returns null.
+    /// </summary>
     [TestMethod]
-    public async Task Given_NonExistentTodoId_When_GetTodo_Then_ReturnsNotFoundMessage()
+    public async Task Given_ApiClientReturnsNull_When_GetTodo_Then_ReturnsNotFoundMessage()
     {
         // Arrange
         _mockApiClient.Setup(c => c.GetTodoByIdAsync(999)).ReturnsAsync((TodoItem?)null);

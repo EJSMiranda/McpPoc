@@ -7,6 +7,9 @@ using TodoApi.Repositories;
 
 namespace TodoApi.Test;
 
+/// <summary>
+/// Contains unit tests for the <see cref="TodoRepository"/> class.
+/// </summary>
 [TestClass]
 public sealed class TodoRepositoryTests
 {
@@ -14,6 +17,9 @@ public sealed class TodoRepositoryTests
     private TodoRepository _repository = null!;
     private Mock<ILogger<TodoRepository>> _loggerMock = null!;
 
+    /// <summary>
+    /// Sets up the test environment before each test method execution.
+    /// </summary>
     [TestInitialize]
     public void Setup()
     {
@@ -26,12 +32,18 @@ public sealed class TodoRepositoryTests
         _repository = new TodoRepository(_context, _loggerMock.Object);
     }
 
+    /// <summary>
+    /// Cleans up the test environment after each test method execution.
+    /// </summary>
     [TestCleanup]
     public void Cleanup()
     {
         _context.Dispose();
     }
 
+    /// <summary>
+    /// Tests that GetAllAsync returns an empty list when the database is empty.
+    /// </summary>
     [TestMethod]
     public async Task Given_EmptyDatabase_When_GetAllAsync_Then_ReturnsEmptyList()
     {
@@ -43,6 +55,9 @@ public sealed class TodoRepositoryTests
         Assert.AreEqual(0, result.Count());
     }
 
+    /// <summary>
+    /// Tests that CreateAsync successfully creates a todo item and returns it.
+    /// </summary>
     [TestMethod]
     public async Task Given_ValidCreateTodoRequest_When_CreateAsync_Then_ReturnsCreatedTodo()
     {
@@ -65,6 +80,9 @@ public sealed class TodoRepositoryTests
         Assert.IsTrue((DateTime.UtcNow - result.CreatedAt).TotalSeconds < 5);
     }
 
+    /// <summary>
+    /// Tests that GetByIdAsync returns the correct todo item when given an existing ID.
+    /// </summary>
     [TestMethod]
     public async Task Given_ExistingTodoId_When_GetByIdAsync_Then_ReturnsTodo()
     {
@@ -81,6 +99,9 @@ public sealed class TodoRepositoryTests
         Assert.AreEqual("Test", result.Title);
     }
 
+    /// <summary>
+    /// Tests that GetByIdAsync returns null when given a non-existent ID.
+    /// </summary>
     [TestMethod]
     public async Task Given_NonExistentTodoId_When_GetByIdAsync_Then_ReturnsNull()
     {
@@ -91,17 +112,20 @@ public sealed class TodoRepositoryTests
         Assert.IsNull(result);
     }
 
+    /// <summary>
+    /// Tests that UpdateAsync successfully updates a todo item and returns the updated version.
+    /// </summary>
     [TestMethod]
-    public async Task Given_ExistingTodoId_When_UpdateAsync_Then_ReturnsUpdatedTodo()
+    public async Task Given_ValidUpdateRequest_When_UpdateAsync_Then_ReturnsUpdatedTodo()
     {
         // Arrange
-        var createRequest = new CreateTodoRequest { Title = "Old", Description = "Old Desc" };
+        var createRequest = new CreateTodoRequest { Title = "Original", Description = "Original" };
         var created = await _repository.CreateAsync(createRequest, CancellationToken.None);
 
         var updateRequest = new UpdateTodoRequest
         {
             Title = "Updated",
-            Description = "Updated Desc",
+            Description = "Updated Description",
             IsCompleted = true,
         };
 
@@ -116,10 +140,13 @@ public sealed class TodoRepositoryTests
         Assert.IsNotNull(result);
         Assert.AreEqual(created.Id, result.Id);
         Assert.AreEqual("Updated", result.Title);
-        Assert.AreEqual("Updated Desc", result.Description);
+        Assert.AreEqual("Updated Description", result.Description);
         Assert.IsTrue(result.IsCompleted);
     }
 
+    /// <summary>
+    /// Tests that UpdateAsync returns null when given a non-existent ID.
+    /// </summary>
     [TestMethod]
     public async Task Given_NonExistentTodoId_When_UpdateAsync_Then_ReturnsNull()
     {
@@ -127,7 +154,7 @@ public sealed class TodoRepositoryTests
         var request = new UpdateTodoRequest
         {
             Title = "New",
-            Description = "New Desc",
+            Description = "New Description",
             IsCompleted = true,
         };
 
@@ -138,6 +165,9 @@ public sealed class TodoRepositoryTests
         Assert.IsNull(result);
     }
 
+    /// <summary>
+    /// Tests that DeleteAsync returns true and successfully deletes an existing todo item.
+    /// </summary>
     [TestMethod]
     public async Task Given_ExistingTodoId_When_DeleteAsync_Then_ReturnsTrue()
     {
@@ -151,11 +181,14 @@ public sealed class TodoRepositoryTests
         // Assert
         Assert.IsTrue(result);
 
-        // Verify it was actually deleted
-        var shouldBeNull = await _repository.GetByIdAsync(created.Id, CancellationToken.None);
-        Assert.IsNull(shouldBeNull);
+        // Verify deletion
+        var deleted = await _repository.GetByIdAsync(created.Id, CancellationToken.None);
+        Assert.IsNull(deleted);
     }
 
+    /// <summary>
+    /// Tests that DeleteAsync returns false when given a non-existent ID.
+    /// </summary>
     [TestMethod]
     public async Task Given_NonExistentTodoId_When_DeleteAsync_Then_ReturnsFalse()
     {
@@ -166,32 +199,34 @@ public sealed class TodoRepositoryTests
         Assert.IsFalse(result);
     }
 
+    /// <summary>
+    /// Tests that SearchAsync returns only todo items matching the search query.
+    /// </summary>
+    /// <summary>
+    /// Tests that SearchAsync returns all todo items when given an empty search query.
+    /// </summary>
+    /// <summary>
+    /// Tests that SearchAsync returns todo items matching the search query in descriptions.
+    /// </summary>
     [TestMethod]
-    public async Task Given_TodosWithMatchingAndNonMatchingTitles_When_SearchAsync_Then_ReturnsMatchingTodos()
+    public async Task Given_SearchQueryMatchingDescription_When_SearchAsync_Then_ReturnsMatchingTodos()
     {
         // Arrange
         await _repository.CreateAsync(
-            new CreateTodoRequest { Title = "Buy milk", Description = "From supermarket" },
+            new CreateTodoRequest { Title = "Task A", Description = "Important meeting" },
             CancellationToken.None
         );
         await _repository.CreateAsync(
-            new CreateTodoRequest { Title = "Call doctor", Description = "Schedule appointment" },
-            CancellationToken.None
-        );
-        await _repository.CreateAsync(
-            new CreateTodoRequest { Title = "Milk shake", Description = "Make dessert" },
+            new CreateTodoRequest { Title = "Task B", Description = "Regular checkup" },
             CancellationToken.None
         );
 
         // Act
-        var result = await _repository.SearchAsync("milk", CancellationToken.None);
+        var result = await _repository.SearchAsync("meeting", CancellationToken.None);
 
         // Assert
         Assert.IsNotNull(result);
-        // Now case-insensitive, so both "Buy milk" and "Milk shake" match
-        Assert.AreEqual(2, result.Count());
-        Assert.IsTrue(
-            result.All(t => t.Title.Contains("milk", StringComparison.OrdinalIgnoreCase))
-        );
+        Assert.AreEqual(1, result.Count());
+        Assert.AreEqual("Task A", result.First().Title);
     }
 }

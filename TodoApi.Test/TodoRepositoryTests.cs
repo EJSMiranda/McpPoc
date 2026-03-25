@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using TodoApi.Data;
 using TodoApi.Models;
 using TodoApi.Repositories;
@@ -10,6 +12,7 @@ public sealed class TodoRepositoryTests
 {
     private TodoContext _context = null!;
     private TodoRepository _repository = null!;
+    private Mock<ILogger<TodoRepository>> _loggerMock = null!;
 
     [TestInitialize]
     public void Setup()
@@ -19,7 +22,8 @@ public sealed class TodoRepositoryTests
             .Options;
 
         _context = new TodoContext(options);
-        _repository = new TodoRepository(_context);
+        _loggerMock = new Mock<ILogger<TodoRepository>>();
+        _repository = new TodoRepository(_context, _loggerMock.Object);
     }
 
     [TestCleanup]
@@ -32,7 +36,7 @@ public sealed class TodoRepositoryTests
     public async Task Given_EmptyDatabase_When_GetAllAsync_Then_ReturnsEmptyList()
     {
         // Act
-        var result = await _repository.GetAllAsync();
+        var result = await _repository.GetAllAsync(CancellationToken.None);
 
         // Assert
         Assert.IsNotNull(result);
@@ -50,7 +54,7 @@ public sealed class TodoRepositoryTests
         };
 
         // Act
-        var result = await _repository.CreateAsync(request);
+        var result = await _repository.CreateAsync(request, CancellationToken.None);
 
         // Assert
         Assert.IsNotNull(result);
@@ -66,10 +70,10 @@ public sealed class TodoRepositoryTests
     {
         // Arrange
         var request = new CreateTodoRequest { Title = "Test", Description = "Desc" };
-        var created = await _repository.CreateAsync(request);
+        var created = await _repository.CreateAsync(request, CancellationToken.None);
 
         // Act
-        var result = await _repository.GetByIdAsync(created.Id);
+        var result = await _repository.GetByIdAsync(created.Id, CancellationToken.None);
 
         // Assert
         Assert.IsNotNull(result);
@@ -81,7 +85,7 @@ public sealed class TodoRepositoryTests
     public async Task Given_NonExistentTodoId_When_GetByIdAsync_Then_ReturnsNull()
     {
         // Act
-        var result = await _repository.GetByIdAsync(999);
+        var result = await _repository.GetByIdAsync(999, CancellationToken.None);
 
         // Assert
         Assert.IsNull(result);
@@ -92,7 +96,7 @@ public sealed class TodoRepositoryTests
     {
         // Arrange
         var createRequest = new CreateTodoRequest { Title = "Old", Description = "Old Desc" };
-        var created = await _repository.CreateAsync(createRequest);
+        var created = await _repository.CreateAsync(createRequest, CancellationToken.None);
 
         var updateRequest = new UpdateTodoRequest
         {
@@ -102,7 +106,11 @@ public sealed class TodoRepositoryTests
         };
 
         // Act
-        var result = await _repository.UpdateAsync(created.Id, updateRequest);
+        var result = await _repository.UpdateAsync(
+            created.Id,
+            updateRequest,
+            CancellationToken.None
+        );
 
         // Assert
         Assert.IsNotNull(result);
@@ -124,7 +132,7 @@ public sealed class TodoRepositoryTests
         };
 
         // Act
-        var result = await _repository.UpdateAsync(999, request);
+        var result = await _repository.UpdateAsync(999, request, CancellationToken.None);
 
         // Assert
         Assert.IsNull(result);
@@ -135,16 +143,16 @@ public sealed class TodoRepositoryTests
     {
         // Arrange
         var request = new CreateTodoRequest { Title = "To Delete", Description = "Desc" };
-        var created = await _repository.CreateAsync(request);
+        var created = await _repository.CreateAsync(request, CancellationToken.None);
 
         // Act
-        var result = await _repository.DeleteAsync(created.Id);
+        var result = await _repository.DeleteAsync(created.Id, CancellationToken.None);
 
         // Assert
         Assert.IsTrue(result);
 
         // Verify it was actually deleted
-        var shouldBeNull = await _repository.GetByIdAsync(created.Id);
+        var shouldBeNull = await _repository.GetByIdAsync(created.Id, CancellationToken.None);
         Assert.IsNull(shouldBeNull);
     }
 
@@ -152,7 +160,7 @@ public sealed class TodoRepositoryTests
     public async Task Given_NonExistentTodoId_When_DeleteAsync_Then_ReturnsFalse()
     {
         // Act
-        var result = await _repository.DeleteAsync(999);
+        var result = await _repository.DeleteAsync(999, CancellationToken.None);
 
         // Assert
         Assert.IsFalse(result);
@@ -163,22 +171,27 @@ public sealed class TodoRepositoryTests
     {
         // Arrange
         await _repository.CreateAsync(
-            new CreateTodoRequest { Title = "Buy milk", Description = "From supermarket" }
+            new CreateTodoRequest { Title = "Buy milk", Description = "From supermarket" },
+            CancellationToken.None
         );
         await _repository.CreateAsync(
-            new CreateTodoRequest { Title = "Call doctor", Description = "Schedule appointment" }
+            new CreateTodoRequest { Title = "Call doctor", Description = "Schedule appointment" },
+            CancellationToken.None
         );
         await _repository.CreateAsync(
-            new CreateTodoRequest { Title = "Milk shake", Description = "Make dessert" }
+            new CreateTodoRequest { Title = "Milk shake", Description = "Make dessert" },
+            CancellationToken.None
         );
 
         // Act
-        var result = await _repository.SearchAsync("milk");
+        var result = await _repository.SearchAsync("milk", CancellationToken.None);
 
         // Assert
         Assert.IsNotNull(result);
-        // EF Core InMemory is case-sensitive, so only "Buy milk" matches
-        Assert.AreEqual(1, result.Count());
-        Assert.IsTrue(result.Any(t => t.Title.Contains("milk")));
+        // Now case-insensitive, so both "Buy milk" and "Milk shake" match
+        Assert.AreEqual(2, result.Count());
+        Assert.IsTrue(
+            result.All(t => t.Title.Contains("milk", StringComparison.OrdinalIgnoreCase))
+        );
     }
 }

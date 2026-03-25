@@ -14,7 +14,7 @@ builder.Services.AddSwaggerGen();
 var dbPath = "todo_temp.db";
 builder.Services.AddDbContext<TodoContext>(
     options => options.UseSqlite($"Data Source={dbPath}"),
-    ServiceLifetime.Singleton
+    ServiceLifetime.Scoped
 );
 
 // Register repositories
@@ -68,9 +68,9 @@ using (var scope = app.Services.CreateScope())
 // API Endpoints
 app.MapGet(
         "/api/todos",
-        async (ITodoRepository repository) =>
+        async (ITodoRepository repository, CancellationToken cancellationToken) =>
         {
-            var todos = await repository.GetAllAsync();
+            var todos = await repository.GetAllAsync(cancellationToken);
             return Results.Ok(todos);
         }
     )
@@ -79,9 +79,9 @@ app.MapGet(
 
 app.MapGet(
         "/api/todos/{id}",
-        async (int id, ITodoRepository repository) =>
+        async (int id, ITodoRepository repository, CancellationToken cancellationToken) =>
         {
-            var todo = await repository.GetByIdAsync(id);
+            var todo = await repository.GetByIdAsync(id, cancellationToken);
             return todo is not null ? Results.Ok(todo) : Results.NotFound();
         }
     )
@@ -90,9 +90,13 @@ app.MapGet(
 
 app.MapPost(
         "/api/todos",
-        async (CreateTodoRequest request, ITodoRepository repository) =>
+        async (
+            CreateTodoRequest request,
+            ITodoRepository repository,
+            CancellationToken cancellationToken
+        ) =>
         {
-            var todo = await repository.CreateAsync(request);
+            var todo = await repository.CreateAsync(request, cancellationToken);
             return Results.Created($"/api/todos/{todo.Id}", todo);
         }
     )
@@ -101,9 +105,14 @@ app.MapPost(
 
 app.MapPut(
         "/api/todos/{id}",
-        async (int id, UpdateTodoRequest request, ITodoRepository repository) =>
+        async (
+            int id,
+            UpdateTodoRequest request,
+            ITodoRepository repository,
+            CancellationToken cancellationToken
+        ) =>
         {
-            var todo = await repository.UpdateAsync(id, request);
+            var todo = await repository.UpdateAsync(id, request, cancellationToken);
             return todo is not null ? Results.Ok(todo) : Results.NotFound();
         }
     )
@@ -112,9 +121,9 @@ app.MapPut(
 
 app.MapDelete(
         "/api/todos/{id}",
-        async (int id, ITodoRepository repository) =>
+        async (int id, ITodoRepository repository, CancellationToken cancellationToken) =>
         {
-            var deleted = await repository.DeleteAsync(id);
+            var deleted = await repository.DeleteAsync(id, cancellationToken);
             return deleted ? Results.NoContent() : Results.NotFound();
         }
     )
@@ -123,12 +132,12 @@ app.MapDelete(
 
 app.MapGet(
         "/api/todos/search",
-        async (string q, ITodoRepository repository) =>
+        async (string q, ITodoRepository repository, CancellationToken cancellationToken) =>
         {
             if (string.IsNullOrWhiteSpace(q))
                 return Results.BadRequest("Search query is required");
 
-            var todos = await repository.SearchAsync(q);
+            var todos = await repository.SearchAsync(q, cancellationToken);
             return Results.Ok(todos);
         }
     )
